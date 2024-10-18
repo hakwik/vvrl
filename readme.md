@@ -26,3 +26,6 @@ It comes with reloading data bundled. You can however chose to download new data
 and use that for display. That is triggered by the -d flag:
 
 ```vvrl -d -m Barnes -w 127 "6,5 Creedmoor"```
+
+*Note* that this data is currently not stored, so you need to use the -d flag
+to always get the current VV data.

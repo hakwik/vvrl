@@ -55,9 +55,17 @@ func main() {
 		panic("could not unmarshal json: " + err.Error())
 	}
 
-	cname := flag.Arg(0)
-	if cname == "cartridges" {
+	arg := flag.Arg(0)
+
+	switch arg {
+	case "cartridges":
 		listCartridges()
+		os.Exit(0)
+	case "manufacturers":
+		listBullets(0)
+		os.Exit(0)
+	case "bullets":
+		listBullets(1)
 		os.Exit(0)
 	}
 
@@ -65,7 +73,7 @@ func main() {
 		fmt.Println("Reloading data version:", data.Info[0].Greate)
 	}
 
-	cartridgeId := data.cartridgeIdFromName(cname)
+	cartridgeId := data.cartridgeIdFromName(arg)
 
 	reloads := data.Relodata.filterByCartridgeId(cartridgeId).filterByBulletWeight(bulletweight).filterByPowderType(powder).filterByBulletMfg(manufacturer).filterByBulletName(bulletname)
 
@@ -105,9 +113,32 @@ func listCartridges() {
 		names = append(names, v.Cartridge)
 	}
 
+	println("CARTRIDGE")
 	sort.Strings(names)
 
 	for _, v := range names {
 		fmt.Println(v)
+	}
+}
+
+func listBullets(i int) {
+	bmap := data.bulletMap()
+	uniqueBullets := make(map[string]bool)
+
+	for _, b := range bmap {
+		if b[0] == "" {
+			continue
+		}
+		uniqueBullets[b[i]] = false
+	}
+
+	if i == 0 {
+		fmt.Println("BULLET MANUFACTURER")
+	} else {
+		fmt.Println("BULLET MODEL")
+	}
+
+	for _, bullet := range sortedMapKeys(uniqueBullets) {
+		fmt.Println(bullet)
 	}
 }

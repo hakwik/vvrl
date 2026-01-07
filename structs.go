@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"strconv"
 	"text/tabwriter"
 )
 
@@ -28,6 +29,40 @@ type Relodata struct {
 	MaxLoadFps         string `json:"MaxLoadFps"`
 	LoadType           string `json:"LoadType"`
 	State              int    `json:"State"`
+}
+
+func (r Relodata) Sensitivity() float64 {
+	maxLoadFps, err := strconv.ParseFloat(r.MaxLoadFps, 64)
+	if err != nil {
+		panic(err)
+	}
+	startLoadFps, err := strconv.ParseFloat(r.StartLoadFps, 64)
+	if err != nil {
+		panic(err)
+	}
+	fpsSpan := maxLoadFps - startLoadFps
+	maxLoadGrains, err := strconv.ParseFloat(r.MaxloadGrains, 64)
+	if err != nil {
+		panic(err)
+	}
+	startLoadGrains, err := strconv.ParseFloat(r.StartloadGrains, 64)
+	if err != nil {
+		panic(err)
+	}
+
+	return fpsSpan / (maxLoadGrains - startLoadGrains)
+}
+
+func (r Relodata) Efficiency() float64 {
+	maxLoadFps, err := strconv.ParseFloat(r.MaxLoadFps, 64)
+	if err != nil {
+		panic(err)
+	}
+	maxLoadGrains, err := strconv.ParseFloat(r.MaxloadGrains, 64)
+	if err != nil {
+		panic(err)
+	}
+	return maxLoadFps / maxLoadGrains
 }
 
 type VvData struct {
@@ -198,13 +233,22 @@ func (reloads Reloads) filterByBulletName(bulletname string) Reloads {
 	return matches
 }
 
-func printTable(reloads Reloads) {
+func printTable(reloads Reloads, verbose bool) {
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', tabwriter.StripEscape)
-	fmt.Fprint(w, "BULLET\tBULLET WEIGHT\tPOWDER\tCOL\tMIN\tMAX\tMIN M/S\tMAX M/S\n")
+	if verbose {
+		fmt.Fprint(w, "BULLET\tBULLET WEIGHT\tPOWDER\tCOL\tMIN\tMAX\tMIN M/S\tMAX M/S\tSENSITIVITY\tEFFICIENCY\n")
+	} else {
+		fmt.Fprint(w, "BULLET\tBULLET WEIGHT\tPOWDER\tCOL\tMIN\tMAX\tMIN M/S\tMAX M/S\n")
+	}
 	for _, v := range reloads {
+		var line string
 		mfg, name := data.bulletNameFromId(v.BulletID)
-		str := fmt.Sprintf("%s %s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", mfg, name, v.BulletWeightGrains, v.PowderType, v.ColMM, v.StartloadGrains, v.MaxloadGrains, v.StartloadMs, v.MaxloadMs)
-		fmt.Fprint(w, str)
+		if verbose {
+			line = fmt.Sprintf("%s %s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%.1f\t%.1f\n", mfg, name, v.BulletWeightGrains, v.PowderType, v.ColMM, v.StartloadGrains, v.MaxloadGrains, v.StartloadMs, v.MaxloadMs, v.Sensitivity(), v.Efficiency())
+		} else {
+			line = fmt.Sprintf("%s %s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", mfg, name, v.BulletWeightGrains, v.PowderType, v.ColMM, v.StartloadGrains, v.MaxloadGrains, v.StartloadMs, v.MaxloadMs)
+		}
+		fmt.Fprint(w, line)
 	}
 	w.Flush()
 }

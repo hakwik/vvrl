@@ -13,7 +13,7 @@ import (
 )
 
 var (
-	//go:embed rldata.json
+	//go:embed relodata.json
 	f string
 
 	dataUrl = "https://www.vihtavuori.com/wp-content/themes/vihtavuori/sovellus_vihtavuori/relodata.json"
@@ -75,9 +75,14 @@ func main() {
 
 	cartridgeId := data.cartridgeIdFromName(arg)
 
-	reloads := data.Relodata.filterByCartridgeId(cartridgeId).filterByBulletWeight(bulletweight).filterByPowderType(powder).filterByBulletMfg(manufacturer).filterByBulletName(bulletname)
+	reloads := data.Relodata.
+		filterByCartridgeId(cartridgeId).
+		filterByBulletWeight(bulletweight).
+		filterByPowderType(powder).
+		filterByBulletMfg(manufacturer).
+		filterByBulletName(bulletname)
 
-	printTable(reloads)
+	printTable(reloads, verbose)
 }
 
 func download() (string, error) {

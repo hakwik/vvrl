@@ -29,6 +29,11 @@ You can filter the selection with the following flags:
 -m    Bullet manufacturer (example: "Lapua")
 ```
 
+Verbose output also provides efficiency and sensitivity metrics (see [this article](https://storage.googleapis.com/wzukusers/user-33607572/documents/627aa957424246239bb5fe1bbb1204bf/Load%20Development%20v2.pdf)):
+```
+-v    Verbose output
+```
+
 ### Sub-commands
 ```
 cartridges    List all avaliable cartridges
@@ -50,7 +55,6 @@ to always get the current VV data.
 It is certainly possible to update the bundled reloading data so you don't have to
 use the `-d`flag all the time.. Upon build, the rldata.json file is embedded in the executable.
 
-You can replace that rldata.json
-file with new contents you download 
+You can replace that relodata.json file with new contents you download 
 [from Vihtavuori](https://www.vihtavuori.com/wp-content/themes/vihtavuori/sovellus_vihtavuori/relodata.json) and run `go build` or `go install` to build and/or install a new
 executable.

@@ -1,5 +1,6 @@
 # vvrl
 Dumb tool to simply display reloading data from Vihtavuori.
+![Screenshot](/doc/screenshot.png)
 
 ## Installation
 ```CGO_ENABLED=0 go install -ldflags "-s -w" .```

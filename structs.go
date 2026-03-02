@@ -7,31 +7,31 @@ import (
 	"text/tabwriter"
 )
 
-type Reloads []Relodata
+type Reloads []ReloData
 
-type Relodata struct {
-	CartridgeID        int    `json:"CartridgeID"`
-	BulletID           int    `json:"BulletID"`
-	BulletWeightGrams  string `json:"BulletWeightGrams"`
-	BulletWeightGrains string `json:"BulletWeightGrains"`
-	ColMM              string `json:"ColMM"`
-	ColInc             string `json:"ColInc"`
-	BarrelLength       any    `json:"BarrelLength"`
-	BarrelLengthInc    string `json:"BarrelLengthInc"`
-	PowderType         string `json:"PowderType"`
-	StartloadGrams     string `json:"StartloadGrams"`
-	StartloadGrains    string `json:"StartloadGrains"`
-	StartloadMs        string `json:"StartloadMs"`
-	StartLoadFps       string `json:"StartLoadFps"`
-	MaxloadGrams       string `json:"MaxloadGrams"`
-	MaxloadGrains      string `json:"MaxloadGrains"`
-	MaxloadMs          string `json:"MaxloadMs"`
-	MaxLoadFps         string `json:"MaxLoadFps"`
-	LoadType           string `json:"LoadType"`
-	State              int    `json:"State"`
+type ReloData struct {
+	CartridgeID        int         `json:"CartridgeID"`
+	BulletID           int         `json:"BulletID"`
+	BulletWeightGrams  string      `json:"BulletWeightGrams"`
+	BulletWeightGrains string      `json:"BulletWeightGrains"`
+	ColMM              string      `json:"ColMM"`
+	ColInc             string      `json:"ColInc"`
+	BarrelLength       interface{} `json:"BarrelLength"`
+	BarrelLengthInc    string      `json:"BarrelLengthInc"`
+	PowderType         string      `json:"PowderType"`
+	StartLoadGrams     string      `json:"StartLoadGrams"`
+	StartLoadGrains    string      `json:"StartLoadGrains"`
+	StartLoadMs        string      `json:"StartLoadMs"`
+	StartLoadFps       string      `json:"StartLoadFps"`
+	MaxLoadGrams       string      `json:"MaxLoadGrams"`
+	MaxLoadGrains      string      `json:"MaxLoadGrains"`
+	MaxLoadMs          string      `json:"MaxLoadMs"`
+	MaxLoadFps         string      `json:"MaxLoadFps"`
+	LoadType           string      `json:"LoadType"`
+	State              int         `json:"State"`
 }
 
-func (r Relodata) Sensitivity() float64 {
+func (r ReloData) Sensitivity() float64 {
 	maxLoadFps, err := strconv.ParseFloat(r.MaxLoadFps, 64)
 	if err != nil {
 		panic(err)
@@ -41,11 +41,11 @@ func (r Relodata) Sensitivity() float64 {
 		panic(err)
 	}
 	fpsSpan := maxLoadFps - startLoadFps
-	maxLoadGrains, err := strconv.ParseFloat(r.MaxloadGrains, 64)
+	maxLoadGrains, err := strconv.ParseFloat(r.MaxLoadGrains, 64)
 	if err != nil {
 		panic(err)
 	}
-	startLoadGrains, err := strconv.ParseFloat(r.StartloadGrains, 64)
+	startLoadGrains, err := strconv.ParseFloat(r.StartLoadGrains, 64)
 	if err != nil {
 		panic(err)
 	}
@@ -53,12 +53,12 @@ func (r Relodata) Sensitivity() float64 {
 	return fpsSpan / (maxLoadGrains - startLoadGrains)
 }
 
-func (r Relodata) Efficiency() float64 {
+func (r ReloData) Efficiency() float64 {
 	maxLoadFps, err := strconv.ParseFloat(r.MaxLoadFps, 64)
 	if err != nil {
 		panic(err)
 	}
-	maxLoadGrains, err := strconv.ParseFloat(r.MaxloadGrains, 64)
+	maxLoadGrains, err := strconv.ParseFloat(r.MaxLoadGrains, 64)
 	if err != nil {
 		panic(err)
 	}
@@ -68,11 +68,11 @@ func (r Relodata) Efficiency() float64 {
 type VvData struct {
 	Description string `json:"Description"`
 	Version     string `json:"Version"`
-	Bulletdata  []struct {
+	BulletData  []struct {
 		BulletID   int    `json:"BulletId"`
-		Bulletname string `json:"Bulletname"`
-		Bulletmfg  string `json:"Bulletmfg"`
-	} `json:"Bulletdata"`
+		BulletName string `json:"BulletName"`
+		BulletMfg  string `json:"BulletMfg"`
+	} `json:"BulletData"`
 	CartridgeData []struct {
 		CartridgeID    int    `json:"CartridgeID"`
 		CartridgeOrder int    `json:"CartridgeOrder"`
@@ -92,7 +92,7 @@ type VvData struct {
 	} `json:"PowderData"`
 	ReloComments []struct {
 		CartridgeID       int    `json:"CartridgeId"`
-		Bulletid          int    `json:"bulletid"`
+		BulletID          int    `json:"bulletid"`
 		BulletWeightGrams string `json:"BulletWeightGrams"`
 		CommentIndex      int    `json:"CommentIndex"`
 		CommentColumn     string `json:"CommentColumn"`
@@ -103,7 +103,7 @@ type VvData struct {
 		Name           string `json:"Name"`
 		UsedInNewRelos int    `json:"UsedInNewRelos"`
 	} `json:"GartridgeGroup"`
-	Relodata Reloads `json:"Relodata"`
+	ReloData Reloads `json:"ReloData"`
 	Info     []struct {
 		State             string `json:"State:"`
 		Greate            string `json:"Greate"`
@@ -111,15 +111,15 @@ type VvData struct {
 		RelosTotal        int    `json:"RelosTotal"`
 		RelosHandled      int    `json:"RelosHandled"`
 		RelosUnHandled    int    `json:"RelosUnHandled"`
-		TotalNewRelolines int    `json:"Total New Relolines"`
+		TotalNewReloLines int    `json:"Total New Relolines"`
 	} `json:"Info"`
 }
 
 func (data VvData) bulletMap() map[int][]string {
 	bullets := make(map[int][]string)
 
-	for _, v := range data.Bulletdata {
-		bullets[v.BulletID] = []string{v.Bulletmfg, v.Bulletname}
+	for _, v := range data.BulletData {
+		bullets[v.BulletID] = []string{v.BulletMfg, v.BulletName}
 	}
 
 	return bullets
@@ -167,7 +167,7 @@ func (data VvData) cartridgeIdFromString(name string) int {
 }
 
 func (reloads Reloads) filterByCartridgeId(cartridgeId int) Reloads {
-	matches := make([]Relodata, 0)
+	matches := make([]ReloData, 0)
 	for _, v := range reloads {
 		if v.CartridgeID == cartridgeId {
 			matches = append(matches, v)
@@ -181,7 +181,7 @@ func (reloads Reloads) filterByBulletWeight(grains string) Reloads {
 		return reloads
 	}
 
-	matches := make([]Relodata, 0)
+	matches := make([]ReloData, 0)
 	for _, v := range reloads {
 		if v.BulletWeightGrains == grains {
 			matches = append(matches, v)
@@ -195,7 +195,7 @@ func (reloads Reloads) filterByPowderType(powderType string) Reloads {
 		return reloads
 	}
 
-	matches := make([]Relodata, 0)
+	matches := make([]ReloData, 0)
 	for _, v := range reloads {
 		if v.PowderType == powderType {
 			matches = append(matches, v)
@@ -209,7 +209,7 @@ func (reloads Reloads) filterByBulletMfg(mfg string) Reloads {
 		return reloads
 	}
 
-	matches := make([]Relodata, 0)
+	matches := make([]ReloData, 0)
 	for _, v := range reloads {
 		if data.bulletMfgFromId(v.BulletID) == mfg {
 			matches = append(matches, v)
@@ -223,7 +223,7 @@ func (reloads Reloads) filterByBulletName(bulletname string) Reloads {
 		return reloads
 	}
 
-	matches := make([]Relodata, 0)
+	matches := make([]ReloData, 0)
 	for _, v := range reloads {
 		_, name := data.bulletNameFromId(v.BulletID)
 		if name == bulletname {
@@ -244,9 +244,9 @@ func printTable(reloads Reloads, verbose bool) {
 		var line string
 		mfg, name := data.bulletNameFromId(v.BulletID)
 		if verbose {
-			line = fmt.Sprintf("%s %s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%.1f\t%.1f\n", mfg, name, v.BulletWeightGrains, v.PowderType, v.ColMM, v.StartloadGrains, v.MaxloadGrains, v.StartloadMs, v.MaxloadMs, v.Sensitivity(), v.Efficiency())
+			line = fmt.Sprintf("%s %s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%.1f\t%.1f\n", mfg, name, v.BulletWeightGrains, v.PowderType, v.ColMM, v.StartLoadGrains, v.MaxLoadGrains, v.StartLoadMs, v.MaxLoadMs, v.Sensitivity(), v.Efficiency())
 		} else {
-			line = fmt.Sprintf("%s %s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", mfg, name, v.BulletWeightGrains, v.PowderType, v.ColMM, v.StartloadGrains, v.MaxloadGrains, v.StartloadMs, v.MaxloadMs)
+			line = fmt.Sprintf("%s %s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", mfg, name, v.BulletWeightGrains, v.PowderType, v.ColMM, v.StartLoadGrains, v.MaxLoadGrains, v.StartLoadMs, v.MaxLoadMs)
 		}
 		fmt.Fprint(w, line)
 	}

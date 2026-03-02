@@ -8,23 +8,22 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"path/filepath"
+	"runtime"
 	"sort"
 	"time"
 )
 
 var (
-	//go:embed relodata.json
-	f string
-
 	dataUrl = "https://www.vihtavuori.com/wp-content/themes/vihtavuori/sovellus_vihtavuori/relodata.json"
 
 	verbose      bool
 	powder       string
 	bulletweight string
 	bulletname   string
-	data         VvData
 	manufacturer string
 	dl           = false
+	data         VvData
 	timeout      time.Duration
 )
 
@@ -42,18 +41,26 @@ func main() {
 	flag.Parse()
 	var err error
 
-	if dl {
-		f, err = download()
+	d, err := loadData()
+	if err != nil {
+		fmt.Println("failed to load data:", err)
+		d, err = downloadAndSave()
 		if err != nil {
-			fmt.Println("Something bad happened when downloading data:", err.Error())
+			fmt.Println("failed to save data:", err)
 			os.Exit(1)
+		}
+		fmt.Println("saved data to local storage")
+	}
+
+	if dl {
+		fmt.Println("downloading new data")
+		d, err = downloadAndSave()
+		if err != nil {
+			fmt.Println("failed to download and save data:", err)
 		}
 	}
 
-	err = json.Unmarshal([]byte(f), &data)
-	if err != nil {
-		panic("could not unmarshal json: " + err.Error())
-	}
+	data = d
 
 	arg := flag.Arg(0)
 
@@ -75,7 +82,7 @@ func main() {
 
 	cartridgeId := data.cartridgeIdFromName(arg)
 
-	reloads := data.Relodata.
+	reloads := data.ReloData.
 		filterByCartridgeId(cartridgeId).
 		filterByBulletWeight(bulletweight).
 		filterByPowderType(powder).
@@ -85,30 +92,50 @@ func main() {
 	printTable(reloads, verbose)
 }
 
-func download() (string, error) {
+func downloadAndSave() (VvData, error) {
+	var d VvData
+	d, err := download()
+	if err != nil {
+		return d, err
+	}
+
+	err = saveData(d)
+	if err != nil {
+		return d, err
+	}
+	return d, nil
+}
+
+func download() (VvData, error) {
 	fmt.Println("downloading data from Vihtavuori...")
+
+	var data VvData
 
 	t0 := time.Now()
 	cli := http.Client{Timeout: timeout}
 	req, err := http.NewRequest("GET", dataUrl, nil)
 	if err != nil {
-		return "", err
+		return data, err
 	}
 	res, err := cli.Do(req)
 	if err != nil {
-		return "", err
+		return data, err
 	}
 	defer res.Body.Close()
 	body, err := io.ReadAll(res.Body)
 	if err != nil {
-		return "", err
+		return data, err
 	}
 
 	if verbose {
 		fmt.Printf("downloaded %d bytes in %v\n", len(body), time.Since(t0))
 	}
 
-	return string(body), nil
+	err = json.Unmarshal(body, &data)
+	if err != nil {
+		return data, err
+	}
+	return data, nil
 }
 
 func listCartridges() {
@@ -146,4 +173,79 @@ func listBullets(i int) {
 	for _, bullet := range sortedMapKeys(uniqueBullets) {
 		fmt.Println(bullet)
 	}
+}
+
+func saveData(data VvData) error {
+	var err error
+	storageLocation, err := getStorageLocation()
+	if err != nil {
+		return err
+	}
+	f, err := os.OpenFile(storageLocation, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	bytes, err := json.Marshal(data)
+	if err != nil {
+		return err
+	}
+	_, err = f.Write(bytes)
+
+	return nil
+}
+
+func loadData() (VvData, error) {
+	var data VvData
+	storageLocation, err := getStorageLocation()
+	if err != nil {
+		return VvData{}, err
+	}
+
+	f, err := os.OpenFile(storageLocation, os.O_RDONLY, 0600)
+	if err != nil {
+		return VvData{}, err
+	}
+	defer f.Close()
+
+	bytes, err := io.ReadAll(f)
+	if err != nil {
+		return VvData{}, err
+	}
+
+	err = json.Unmarshal(bytes, &data)
+	if err != nil {
+		return VvData{}, err
+	}
+
+	return data, nil
+}
+
+func getStorageLocation() (string, error) {
+	var storageLocation string
+
+	switch runtime.GOOS {
+	case "windows":
+		localappdata := os.Getenv("APPDATA")
+		if localappdata == "" {
+			return "", fmt.Errorf("could not locate user's appdata directory")
+		}
+		storageLocation = filepath.Join(localappdata, "vvrl.json")
+	default:
+		home := os.Getenv("HOME")
+		if home == "" {
+			return "", fmt.Errorf("could not locate user's home directory")
+		}
+		cfgDir := filepath.Join(home, ".config", "vvrl")
+		if _, err := os.Stat(cfgDir); os.IsNotExist(err) {
+			// does not exist
+			err = os.MkdirAll(cfgDir, 0700)
+			if err != nil {
+				return "", err
+			}
+		}
+		storageLocation = filepath.Join(cfgDir, "vvrl.json")
+	}
+	return storageLocation, nil
 }

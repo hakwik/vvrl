@@ -44,18 +44,7 @@ bullets       List all available bullet models
 
 
 ## Reloading data
-It comes with reloading data bundled. You can however chose to download new data
-and use that for display. That is triggered by the -d flag:
+If data has not been previously fetched, it will attempt to download data on first use.
+You can force downloading of new data, replacing the current data. This is triggered by the -d flag:
 
 ```vvrl -d -m Barnes -w 127 "6,5 Creedmoor"```
-
-*Note* that this data is currently not stored, so you need to use the -d flag
-to always get the current VV data.
-
-### Updating bundled reloading data
-It is certainly possible to update the bundled reloading data so you don't have to
-use the `-d`flag all the time.. Upon build, the rldata.json file is embedded in the executable.
-
-You can replace that relodata.json file with new contents you download 
-[from Vihtavuori](https://www.vihtavuori.com/wp-content/themes/vihtavuori/sovellus_vihtavuori/relodata.json) and run `go build` or `go install` to build and/or install a new
-executable.

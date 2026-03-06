@@ -62,6 +62,10 @@ func main() {
 
 	data = d
 
+	if verbose {
+		fmt.Println("Reloading data version:", data.Info[0].Greate)
+	}
+
 	arg := flag.Arg(0)
 
 	switch arg {
@@ -76,11 +80,12 @@ func main() {
 		os.Exit(0)
 	}
 
-	if verbose {
-		fmt.Println("Reloading data version:", data.Info[0].Greate)
-	}
-
 	cartridgeId := data.cartridgeIdFromName(arg)
+
+	if cartridgeId == 0 {
+		fmt.Println("did you forget to specify a cartridge name?")
+		os.Exit(0)
+	}
 
 	reloads := data.ReloData.
 		filterByCartridgeId(cartridgeId).
